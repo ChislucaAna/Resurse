@@ -83,11 +83,10 @@ try:
         ... return the keywords one after another with commas on a single line
         """
 
-        # ollama_base_url = "https://mint-hornet-keen.ngrok-free.app"
-        # model_local = Ollama(base_url=ollama_base_url, model="phi3:14b")
-
-        ollama_base_url = "https://eager-regularly-beagle.ngrok-free.app"
+        
+        ollama_base_url = os.getenv("ngrok_ollama_server")
         model_local = Ollama(base_url=ollama_base_url, model="llama3")
+        # model_local = Ollama(base_url=ollama_base_url, model="phi3:14b")
 
         response = model_local(query)
             
@@ -104,7 +103,7 @@ try:
     # Print the final aggregated keywords
     print("\n--- Final Aggregated Keywords ---")
     print(final_keywords)    
-    return final_keywords
+    
 finally:
     if os.path.exists(temp_txt_file_path):
         os.remove(temp_txt_file_path)
