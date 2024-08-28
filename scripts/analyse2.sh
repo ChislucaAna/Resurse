@@ -11,6 +11,11 @@ from langchain_community.document_loaders import TextLoader, PyPDFLoader, Docx2t
 from langchain_chroma import Chroma
 from langchain_community.llms import Ollama
 
+from transformers import AutoTokenizer, AutoModel
+import torch
+from sklearn.metrics.pairwise import cosine_similarity
+
+
 # Initialize environment variables
 load_dotenv()
 
@@ -57,21 +62,47 @@ for i, doc in enumerate(docs):
 
     
     ollama_base_url = os.getenv("ngrok_ollama_server")
-    model_local = Ollama(base_url=ollama_base_url, model="llama3")
-    # model_local = Ollama(base_url=ollama_base_url, model="phi3:14b")
+    model_local = Ollama(base_url=ollama_base_url, model="phi3:14b")
 
     response = model_local(query)
+
+    print("This is one response:", response)
         
     # Process the text to extract keywords
-    keywords = response.strip().split(",")
+    keywords = response.strip().split(", ")
 
     # Add the keywords to the set (to automatically handle duplicates)
     all_keywords.update(keyword.strip() for keyword in keywords)
 
-
-# Combine all unique keywords into a comma-separated string
+# combine all unique keywords into a comma-separated string
 final_keywords = ", ".join(sorted(all_keywords, key=str.lower))
+print(final_keywords)
 
-# Print the final aggregated keywords
-print("\n--- Final Aggregated Keywords ---")
-print(final_keywords)    
+# load SciBERT model and tokenizer
+tokenizer = AutoTokenizer.from_pretrained("allenai/scibert_scivocab_uncased")
+model = AutoModel.from_pretrained("allenai/scibert_scivocab_uncased")
+
+# function to get embeddings for a phrase
+def get_embedding(phrase):
+    inputs = tokenizer(phrase, return_tensors="pt")
+    outputs = model(**inputs)
+    # Get the mean of the embeddings across tokens
+    embedding = outputs.last_hidden_state.mean(dim=1)
+    return embedding
+
+answer = ""
+# embeddings for the fields
+embedding1 = get_embedding("mathematics")
+embedding2 = get_embedding("computer science")
+
+# keep only words related to the mathematics and computer science fields
+for phrase in final_keywords.split(", "):
+    embedding = get_embedding(phrase)
+    similarity1 = cosine_similarity(embedding1.detach().numpy(), embedding.detach().numpy())
+    similarity2 = cosine_similarity(embedding2.detach().numpy(), embedding.detach().numpy())
+    if similarity1[0][0] >= 0.6 or similarity2[0][0] >= 0.6:
+        answer += phrase + ", " 
+
+
+print("\n--- Final Keywords ---")
+print(answer)
