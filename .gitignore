@@ -3,3 +3,5 @@ Documents/
 Images/
 PDFs/
 images/
+.env
+resources/*
