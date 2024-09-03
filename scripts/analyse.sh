@@ -1,7 +1,13 @@
 #!/bin/bash
 
+# Ensure the NGROK_URL environment variable is set
+if [ -z "$NGROK_URL" ]; then
+  echo "Error: NGROK_URL environment variable is not set."
+  exit 1
+fi
+
 # Encode the image in base64 and store it in a variable
-test=$(base64 $1)
+test=$(base64 "$1")
 
 # Create a JSON payload and write it to a temporary file
 json_payload=$(cat <<EOF
@@ -32,7 +38,10 @@ EOF
 # Write JSON payload to a temporary file
 echo "$json_payload" > /tmp/payload.json
 
-# Use curl to send the JSON request with the payload from the file
-curl --location 'http://localhost:11434/api/chat' \
+# Use curl to send the JSON request with the payload from the file and redirect the output to a file
+curl --location "$NGROK_URL/api/chat" \
 --header 'Content-Type: application/json' \
---data @/tmp/payload.json
+--data @/tmp/payload.json > /tmp/response.json
+
+# Extract keywords from the response JSON and write them to aux.txt
+jq -r '.choices[0].message.content' /tmp/response.json
