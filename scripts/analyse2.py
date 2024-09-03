@@ -24,7 +24,7 @@ class AiAnalysis:
     def analyse(self, input_file_path):
         input_file_path = os.path.join(
             os.path.dirname(self.current_dir), sys.argv[1]
-        )   
+        ) 
 
         # Determine the file type based on the extension
         file_extension = os.path.splitext(input_file_path)[1].lower()
