@@ -40,7 +40,7 @@ class AiAnalysis:
             documents = loader.load()
         else:
             # Use TextLoader to load and parse the Code files
-            loader = TextLoader(temp_txt_file_path)
+            loader = TextLoader(input_file_path)
             documents = loader.load()
 
 
